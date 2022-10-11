@@ -12,11 +12,11 @@ error Voting__UpKeepNotNeeded();
 contract Voting is AutomationCompatibleInterface {
     //State variable //
 
-    uint256 immutable i_interval; // We are dealing with time in seconds //
-    address immutable i_owner;
+    uint256 public immutable i_interval; // We are dealing with time in seconds //
+    address public immutable i_owner;
 
     // Voting variable //
-    string[] Parties;
+    string[] public Parties;
     mapping(uint256 => uint256) voting;
     mapping(address => bool) voters;
     uint256 private s_lastTimeStamp;
@@ -35,14 +35,17 @@ contract Voting is AutomationCompatibleInterface {
 
     // Function //
 
-    function setVoting(string[] memory _Parties) private {
-        if (msg.sender != owner) {
+    function setVoting(string[] memory _Parties) public {
+        if (msg.sender != i_owner) {
             revert Voting__OnlyOwnerCanSetNewVoting();
         }
         if ((block.timestamp - s_lastTimeStamp) > i_interval) {
             revert Voting__PreviousVotingRemaining();
         }
         Parties = _Parties;
+        for (uint256 i = 0; i < Parties.length; i++) {
+            voting[i] = 0;
+        }
     }
 
     function vote(uint256 partyNo) public {
@@ -70,7 +73,7 @@ contract Voting is AutomationCompatibleInterface {
     }
 
     function checkUpkeep(
-        bytes calldata /* checkData */
+        bytes memory /* checkData */
     )
         public
         view
@@ -86,13 +89,12 @@ contract Voting is AutomationCompatibleInterface {
     function performUpkeep(
         bytes calldata /* performData */
     ) external override {
-        //We highly recommend revalidating the upkeep in the performUpkeep function
-        (bool upkeepNeeded, ) = checkUpkeep("");
+        (bool upkeepNeeded, ) = checkUpkeep(" ");
         if (!upkeepNeeded) {
             revert Voting__UpKeepNotNeeded();
         }
         results();
-        emit WinnerPicked(results())
+        emit WinnerPicked(results());
         delete Parties;
     }
 
@@ -109,6 +111,4 @@ contract Voting is AutomationCompatibleInterface {
     function getVotes(uint256 no) public view returns (uint256) {
         return voting[no];
     }
-
-    function getWinner() public view returns (string memory) {}
 }
