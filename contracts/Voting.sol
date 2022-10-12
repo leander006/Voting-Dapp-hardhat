@@ -19,9 +19,10 @@ contract Voting is AutomationCompatibleInterface {
     string[] public Parties;
     mapping(uint256 => uint256) voting;
     mapping(address => bool) voters;
+    string private s_winner;
     uint256 private s_lastTimeStamp;
     // Events //
-
+    event NewVoting(string[] indexed parties);
     event Voted(address indexed voter);
     event WinnerPicked(string indexed name);
 
@@ -46,6 +47,7 @@ contract Voting is AutomationCompatibleInterface {
         for (uint256 i = 0; i < Parties.length; i++) {
             voting[i] = 0;
         }
+        emit NewVoting(Parties);
     }
 
     function vote(uint256 partyNo) public {
@@ -58,18 +60,16 @@ contract Voting is AutomationCompatibleInterface {
         emit Voted(msg.sender);
     }
 
-    function results() internal view returns (string memory) {
+    function results() internal {
         uint256 max;
-        string memory ans;
         for (uint256 i = 0; i < Parties.length; i++) {
             if (voting[i] > max) {
                 max = voting[i];
             }
             if (voting[i] == max) {
-                ans = Parties[i];
+                s_winner = Parties[i];
             }
         }
-        return ans;
     }
 
     function checkUpkeep(
@@ -94,7 +94,7 @@ contract Voting is AutomationCompatibleInterface {
             revert Voting__UpKeepNotNeeded();
         }
         results();
-        emit WinnerPicked(results());
+        emit WinnerPicked(s_winner);
         delete Parties;
     }
 
@@ -106,6 +106,18 @@ contract Voting is AutomationCompatibleInterface {
 
     function votingStatus(address name) public view returns (bool) {
         return voters[name];
+    }
+
+    function getInterval() public view returns (uint256) {
+        return i_interval;
+    }
+
+    function getLatestTimeStamps() public view returns (uint256) {
+        return s_lastTimeStamp;
+    }
+
+    function getWinner() public view returns (string memory) {
+        return s_winner;
     }
 
     function getVotes(uint256 no) public view returns (uint256) {

@@ -14,16 +14,20 @@ module.exports = {
     hardhat: {
       chainId: 31337,
       blockConfirmations: 1,
+      allowUnlimitedContractSize: true,
     },
     goerli: {
       chainId: 5,
       blockConfirmations: 6,
       url: process.env.GOERLI_RPC_URL,
+      allowUnlimitedContractSize: true,
       accounts: [process.env.PRIVATE_KEY],
+      gas: 5000000,
     },
     localhost: {
       chainId: 31337,
       blockConfirmations: 1,
+      allowUnlimitedContractSize: true,
     },
   },
   gasReporter: {

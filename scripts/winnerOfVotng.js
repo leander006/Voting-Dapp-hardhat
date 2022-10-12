@@ -1,13 +1,13 @@
 const { ethers } = require("hardhat");
-const { parties } = require("../helper-hardhat.config");
 
-async function SetVoting() {
+
+async function Winner() {
   const voting = await ethers.getContract("Voting");
   await voting.setVoting(parties);
   console.log("Set parties!");
 }
 
-SetVoting()
+Winner()
   .then(() => process.exit(0))
   .catch((error) => {
     console.error(error);
