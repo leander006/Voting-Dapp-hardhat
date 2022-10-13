@@ -106,5 +106,16 @@ const { expect, assert } = require("chai");
         });
       });
 
-     
+      describe("PerformUpKeep ", () => {
+        it("can only run if checkupkeep is true", async () => {
+          await voting.setVoting(parties);
+          await voting.vote(0);
+          await network.provider.send("evm_increaseTime", [
+            interval.toNumber() + 1,
+          ]);
+          await network.provider.request({ method: "evm_mine", params: [] });
+          const tx = await voting.performUpkeep("0x");
+          assert(tx);
+        });
+      });
     });

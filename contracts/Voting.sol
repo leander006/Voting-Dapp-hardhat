@@ -16,6 +16,7 @@ contract Voting is AutomationCompatibleInterface {
     address public immutable i_owner;
 
     // Voting variable //
+
     string[] public Parties;
     mapping(uint256 => uint256) voting;
     mapping(address => bool) voters;

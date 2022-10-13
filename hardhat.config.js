@@ -8,7 +8,16 @@ require("hardhat-contract-sizer");
 require("dotenv").config();
 
 module.exports = {
-  solidity: "0.8.9",
+  solidity: {
+    compilers: [
+      {
+        version: "0.8.9",
+      },
+      {
+        version: "0.8",
+      },
+    ],
+  },
   defaultNetwork: "hardhat",
   networks: {
     hardhat: {
@@ -40,6 +49,9 @@ module.exports = {
   namedAccounts: {
     deployer: {
       default: 0,
+    },
+    player: {
+      default: 1,
     },
   },
   mocha: {
