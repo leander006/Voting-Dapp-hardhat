@@ -117,5 +117,14 @@ const { expect, assert } = require("chai");
           const tx = await voting.performUpkeep("0x");
           assert(tx);
         });
+
+        it("Should revert when checkupKeep is false", async function () {
+          await network.provider.request({ method: "evm_mine", params: [] });
+          await expect(voting.performUpkeep([])).to.be.revertedWith(
+            "Voting__UpKeepNotNeeded"
+          );
+        });
+        
       });
+      
     });
