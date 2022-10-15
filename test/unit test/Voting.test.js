@@ -124,7 +124,18 @@ const { expect, assert } = require("chai");
             "Voting__UpKeepNotNeeded"
           );
         });
-        
+        it("Should emit event WinnerPicked", async function () {
+          await voting.setVoting(parties);
+          await voting.vote(0);
+          await network.provider.send("evm_increaseTime", [
+            interval.toNumber() + 1,
+          ]);
+          await network.provider.request({ method: "evm_mine", params: [] });
+          await expect(voting.performUpkeep([])).to.emit(
+            voting,
+            "WinnerPicked"
+          );
+        });
       });
       
     });
