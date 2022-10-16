@@ -137,5 +137,21 @@ const { expect, assert } = require("chai");
           );
         });
       });
-      
+      describe("result function ", () => {
+        it("Give us correct answer", async function () {
+          const accounts = await ethers.getSigner();
+          console.log(accounts[1]);
+          await voting.setVoting(parties);
+          await voting.vote(1);
+          await network.provider.send("evm_increaseTime", [
+            interval.toNumber() + 1,
+          ]);
+          await network.provider.request({ method: "evm_mine", params: [] });
+          await voting.performUpkeep("0x");
+          const winner = await voting.getWinner();
+          /// Make results public for testing only ///
+          expect(winner).to.equal(parties[1]);
+          /// ------------ ///
+        });
+      });
     });
