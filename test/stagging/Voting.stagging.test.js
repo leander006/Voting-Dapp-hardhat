@@ -8,12 +8,18 @@ const { expect, assert } = require("chai");
 developmentChains.includes(network.name)
   ? describe.skip
   : describe("Voting stagging test", function () {
-    let voting, deployer, interval;
-    const chainId = network.config.chainId;
-    beforeEach(async function () {
-      deployer = (await getNamedAccounts()).deployer;
-      await deployments.fixture(["all"]);
-      voting = await ethers.getContract("Voting", deployer);
-      interval = await voting.getInterval();
+      let voting, deployer, interval;
+      const chainId = network.config.chainId;
+      beforeEach(async function () {
+        deployer = (await getNamedAccounts()).deployer;
+        await deployments.fixture(["all"]);
+        voting = await ethers.getContract("Voting", deployer);
+        interval = await voting.getInterval();
+      });
+      describe("Voting on test net", () => {
+        await voting.setVoting(parties);
+        const party = await voting.getPartiesName(0);
+
+        expect(party).to.equal(parties[0]);
+      });
     });
-  });
