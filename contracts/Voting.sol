@@ -2,17 +2,24 @@
 
 pragma solidity ^0.8.9;
 
-import "@chainlink/contracts/src/v0.8/AutomationCompatible.sol";
+import "@chainlink/contracts/src/v0.8/interfaces/KeeperCompatibleInterface.sol";
 
 error Voting__CannotVoteAgain();
 error Voting__OnlyOwnerCanSetNewVoting();
-error Voting__PreviousVotingRemaining();
 error Voting__UpKeepNotNeeded();
+error Voting_NotOpen();
 
-contract Voting is AutomationCompatibleInterface {
+contract Voting is KeeperCompatibleInterface {
+    /* Types declarations */
+    enum VotingState {
+        OPEN,
+        CALCULATING
+    }
+
     //State variable //
 
     uint256 public immutable i_interval; // We are dealing with time in seconds //
+    VotingState private s_votingState;
     address public immutable i_owner;
 
     // Voting variable //
@@ -33,6 +40,7 @@ contract Voting is AutomationCompatibleInterface {
         i_interval = _interval;
         i_owner = msg.sender;
         s_lastTimeStamp = block.timestamp;
+        s_votingState = VotingState.OPEN;
     }
 
     // Function //
@@ -41,21 +49,21 @@ contract Voting is AutomationCompatibleInterface {
         if (msg.sender != i_owner) {
             revert Voting__OnlyOwnerCanSetNewVoting();
         }
-        if ((block.timestamp - s_lastTimeStamp) > i_interval) {
-            revert Voting__PreviousVotingRemaining();
+        if (s_votingState != VotingState.OPEN) {
+            revert Voting_NotOpen();
         }
         Parties = _Parties;
         for (uint256 i = 0; i < Parties.length; i++) {
             voting[i] = 0;
         }
         emit NewVoting(Parties);
+        s_votingState = VotingState.CALCULATING;
     }
 
     function vote(uint256 partyNo) public {
         if (voters[msg.sender] == true) {
             revert Voting__CannotVoteAgain();
         }
-
         voters[msg.sender] = true;
         voting[partyNo]++;
         emit Voted(msg.sender);
@@ -71,6 +79,7 @@ contract Voting is AutomationCompatibleInterface {
                 s_winner = Parties[i];
             }
         }
+        s_lastTimeStamp = block.timestamp;
     }
 
     function checkUpkeep(
@@ -84,19 +93,22 @@ contract Voting is AutomationCompatibleInterface {
             bytes memory /* performData */
         )
     {
-        upkeepNeeded = (block.timestamp - s_lastTimeStamp) > i_interval;
+        bool timePassed = ((block.timestamp - s_lastTimeStamp) > i_interval);
+        bool isOpen = VotingState.OPEN == s_votingState;
+        upkeepNeeded = (timePassed && isOpen);
     }
 
     function performUpkeep(
         bytes calldata /* performData */
     ) external override {
-        (bool upkeepNeeded, ) = checkUpkeep(" ");
+        (bool upkeepNeeded, ) = checkUpkeep("");
         if (!upkeepNeeded) {
             revert Voting__UpKeepNotNeeded();
         }
+
         results();
         emit WinnerPicked(s_winner);
-        delete Parties;
+        s_votingState = VotingState.OPEN;
     }
 
     // View / Pure //
