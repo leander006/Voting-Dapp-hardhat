@@ -7,7 +7,7 @@ import "@chainlink/contracts/src/v0.8/interfaces/KeeperCompatibleInterface.sol";
 error Voting__CannotVoteAgain();
 error Voting__OnlyOwnerCanSetNewVoting();
 error Voting__UpKeepNotNeeded();
-error Voting_NotOpen();
+error Voting__NotOpen();
 
 contract Voting is KeeperCompatibleInterface {
     /* Types declarations */
@@ -33,6 +33,7 @@ contract Voting is KeeperCompatibleInterface {
     event NewVoting(string[] indexed parties);
     event Voted(address indexed voter);
     event WinnerPicked(string indexed name);
+    event RequestedVotingWinner(string[] indexed parties);
 
     // Constructor //
 
@@ -50,7 +51,7 @@ contract Voting is KeeperCompatibleInterface {
             revert Voting__OnlyOwnerCanSetNewVoting();
         }
         if (s_votingState != VotingState.OPEN) {
-            revert Voting_NotOpen();
+            revert Voting__NotOpen();
         }
         Parties = _Parties;
         for (uint256 i = 0; i < Parties.length; i++) {
@@ -80,6 +81,7 @@ contract Voting is KeeperCompatibleInterface {
             }
         }
         s_lastTimeStamp = block.timestamp;
+        emit WinnerPicked(s_winner);
     }
 
     function checkUpkeep(
@@ -94,7 +96,7 @@ contract Voting is KeeperCompatibleInterface {
         )
     {
         bool timePassed = ((block.timestamp - s_lastTimeStamp) > i_interval);
-        bool isOpen = VotingState.OPEN == s_votingState;
+        bool isOpen = VotingState.CALCULATING == s_votingState;
         upkeepNeeded = (timePassed && isOpen);
     }
 
@@ -105,10 +107,9 @@ contract Voting is KeeperCompatibleInterface {
         if (!upkeepNeeded) {
             revert Voting__UpKeepNotNeeded();
         }
-
         results();
-        emit WinnerPicked(s_winner);
         s_votingState = VotingState.OPEN;
+        emit RequestedVotingWinner(Parties);
     }
 
     // View / Pure //
@@ -131,6 +132,10 @@ contract Voting is KeeperCompatibleInterface {
 
     function getWinner() public view returns (string memory) {
         return s_winner;
+    }
+
+    function getVotingState() public view returns (VotingState) {
+        return s_votingState;
     }
 
     function getVotes(uint256 no) public view returns (uint256) {

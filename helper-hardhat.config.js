@@ -7,7 +7,7 @@ const networkConfig = {
   },
   5: {
     name: "goerli",
-    interval: "10",
+    interval: "60",
   },
   31337: {
     name: "hardhat",

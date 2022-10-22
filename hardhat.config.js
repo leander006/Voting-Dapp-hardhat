@@ -24,7 +24,7 @@ module.exports = {
     },
     goerli: {
       chainId: 5,
-      blockConfirmations: 6,
+      blockConfirmations: 2,
       url: process.env.GOERLI_RPC_URL,
       allowUnlimitedContractSize: true,
       accounts: [process.env.PRIVATE_KEY],
